@@ -48,28 +48,28 @@ class ActorNewsManager extends Actor{
   override def receive: Receive = {
 
     case msg: RuRss =>
-      ruRss ++= msg.rss
+      ruRss ++= msg.rss.reverse
       if (ruRss.length > 10){
         val upd = ruRss.clone().drop(ruRss.length - 10)
         ruRss.clear()
         ruRss ++= upd
       }
     case msg: EnRss =>
-      enRss ++= msg.rss
+      enRss ++= msg.rss.reverse
       if (enRss.length > 10){
         val upd = enRss.clone().drop(enRss.length - 10)
         enRss.clear()
         enRss ++= upd
       }
     case msg: CnRss =>
-      cnRss ++= msg.rss
+      cnRss ++= msg.rss.reverse
       if (cnRss.length > 10){
         val upd = cnRss.clone().drop(cnRss.length - 10)
         cnRss.clear()
         cnRss ++= upd
       }
     case msg: KzRss =>
-      kzRss ++= msg.rss
+      kzRss ++= msg.rss.reverse
       if (kzRss.length > 10){
         val upd = kzRss.clone().drop(kzRss.length - 10)
         kzRss.clear()
@@ -77,13 +77,13 @@ class ActorNewsManager extends Actor{
       }
 
     case msg: GetRuRss =>
-      msg.cmd.reply("rssNews", Json.toJson(ruRss))
+      msg.cmd.reply("rssNews", Json.toJson(ruRss.reverse))
     case msg: GetEnRss =>
-      msg.cmd.reply("rssNews", Json.toJson(enRss))
+      msg.cmd.reply("rssNews", Json.toJson(enRss.reverse))
     case msg: GetCnRss =>
-      msg.cmd.reply("rssNews", Json.toJson(cnRss))
+      msg.cmd.reply("rssNews", Json.toJson(cnRss.reverse))
     case msg: GetKzRss =>
-      msg.cmd.reply("rssNews", Json.toJson(kzRss))
+      msg.cmd.reply("rssNews", Json.toJson(kzRss.reverse))
 
     case _ => None
   }

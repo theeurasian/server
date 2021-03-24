@@ -25,7 +25,9 @@ class ActorSubscribeManager extends Actor with Logger{
     new Publish("e6", "Выпуск № 6", "ChfNNwxmJv"),
     new Publish("e7", "Выпуск № 7", "JZ7Hnjg4aW"),
     new Publish("e8", "Выпуск № 8", "a2gSkZx2JS"),
-    new Publish("e9", "Выпуск № 9", "22EwjKKh113")
+    new Publish("e9", "Выпуск № 9", "22EwjKKh113"),
+    new Publish("e10", "Выпуск № 10", "10_44821561")
+
   )
 
   def get(url: String, connectTimeout: Int = 5000, readTimeout: Int = 5000, requestMethod: String = "GET") =
