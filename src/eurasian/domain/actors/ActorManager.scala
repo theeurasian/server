@@ -19,6 +19,8 @@ object ActorManager extends Logger{
   var mailManager: ActorRef = _
   var videoManager: ActorRef = _
   var newsManager: ActorRef = _
+  var weatherManager: ActorRef = _
+  var currenciesManager: ActorRef = _
 
   implicit var executor: ExecutionContextExecutor = _
   private val schedulers: ListBuffer[Cancellable] = ListBuffer.empty[Cancellable]

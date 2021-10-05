@@ -1,16 +1,14 @@
 package eurasian.domain.websocket.classes
 
-import java.util.UUID
-
+import java.util.{Date, UUID}
 import org.bson.Document
-import org.joda.time.DateTime
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
 
 case class User(login: String, var password: String, name: String, surname: String, gender: String, birthday: String, email: String, phone: String, var netInfo: String) {
   val id: String = UUID.randomUUID().toString
-  val registrationDate: String = DateTime.now().toString()
+  val registrationDate: String = new Date().getTime.toString()
   var removed = 0
   var ticket: String = "noValue"
   val custom: ListBuffer[KeyValue] = ListBuffer.empty[KeyValue]

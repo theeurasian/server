@@ -1,11 +1,12 @@
 package eurasian.domain.websocket.classes
 
 import org.bson.Document
-import org.joda.time.DateTime
 import play.api.libs.json._
 
+import java.util.Date
+
 case class ClientCredentials(login: String, var ticket: String, password: String, var userId: String) {
-  val date: String = DateTime.now().toString
+  val date: String = new Date().getTime.toString
   def toJson: JsValue ={
     Json.toJson(this)
   }

@@ -1,13 +1,9 @@
 package eurasian.domain.subscribe
 
-import java.time.LocalDate
-import java.util.{Calendar, Date}
-
-import eurasian.domain.websocket.classes.ClientCredentials
 import org.bson.Document
-import org.joda.time.DateTime
-import play.api.libs.json.{JsNull, JsObject, JsResult, JsSuccess, JsValue, Json, Reads, Writes}
+import play.api.libs.json._
 
+import java.util.{Calendar, Date}
 import scala.collection.mutable.ListBuffer
 
 class Subscriber(val name: String, val surname: String, val email: String, val phone: String, val purchases: ListBuffer[String], var purchaseId: String, val units: String) {

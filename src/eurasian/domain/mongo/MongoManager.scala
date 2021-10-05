@@ -30,8 +30,8 @@ object MongoManager extends Logger with MongoCollections with MongoWebSocket wit
     database.getCollection(collection).insertOne(Document.parse(Json.stringify(value)))
   }
   def setLog(message: String): Unit ={
-    val collection = this.logger.getCollection("log")
-    collection.insertOne(new Document(collection.countDocuments().toString, message))
+//    val collection = this.logger.getCollection("log")
+//    collection.insertOne(new Document(collection.countDocuments().toString, message))
   }
   def getDataBase: MongoDatabase = database
 }
