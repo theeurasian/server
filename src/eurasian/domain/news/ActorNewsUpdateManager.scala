@@ -15,9 +15,9 @@ object ActorNewsUpdateManager{
 class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
-    ActorManager.newsManager ! MnRss(getMnRss)
-//    val qwe = getMnRss
-//    val qw = qwe
+    //ActorManager.newsManager ! CnRss(getMnRss)
+    val qwe = getKzRss
+    val qw = qwe
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
   }
@@ -47,31 +47,28 @@ class ActorNewsUpdateManager extends Actor{
     val result = ListBuffer.empty[RssItem]
     try{
       val data = get("https://kaz.zakon.kz/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-      "(?<=<div class=lastnews>).+(?=<div class=alllast>)".r.findFirstIn(data) match {
-        case Some(aHrefData) =>
-          "(?<=<li>)\\s\\s<[^<]+<[^<]+<[^<]+".r.findAllIn(aHrefData).foreach(aHref => {
-            "(?<=href=')[^']+".r.findFirstIn(aHref) match {
-              case Some(url) =>
-                "[^>]+$".r.findFirstIn(aHref) match {
-                  case Some(title) =>
-                    val sitePost = get("https://www.zakon.kz/" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-                    "(?<=ln_time>)[^<]+".r.findFirstIn(aHref) match {
-                      case Some(time) =>
-                        "(?<=description\":\\s)\"[^\"]+\"".r.findFirstIn(sitePost) match {
-                          case Some(description) =>
-                            val quotes = '"'
-                            result += new RssItem(title.trim, "https://www.zakon.kz/" + url.trim, description.trim.replaceAll(quotes.toString, ""), "сегодня", time.trim)
-                          case _ =>
-                        }
-                      case _ => None
+      "(?<=<a href=\")[^<]+<div class=\"zmainCard".r.findAllIn(data).foreach(aHrefData => {
+        "^[^\"]+".r.findFirstIn(aHrefData) match {
+          case Some(aHref) =>
+          val url = "https://kaz.zakon.kz" + aHref
+            val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+            "(?<=<h1>)[^<]+".r.findFirstIn(sitePost) match {
+              case Some(title) =>
+                "(?<=class=\"date\">)[^<]+".r.findFirstIn(sitePost) match {
+                  case Some(time) =>
+                    "(?<=<div class=\"description\">)[^<]+".r.findFirstIn(sitePost) match {
+                      case Some(description) =>
+                        val quotes = '"'
+                        result += new RssItem(title.trim, url.trim, description.trim.replaceAll(quotes.toString, ""), "сегодня", time.trim)
+                      case _ =>
                     }
                   case _ => None
                 }
               case _ => None
             }
-          })
-        case _ => None
-      }
+          case _ => None
+        }
+      })
     }
     catch {
       case e: Exception => None
@@ -306,14 +303,14 @@ class ActorNewsUpdateManager extends Actor{
       "HeaderNews-type_5 \"><a href=\"[^\"]+\"".r.findAllIn(data).foreach(regMatch => {
         "(?<=<a href=\")[^\"]+".r.findFirstIn(regMatch) match {
           case Some(url) =>
-            val sitePost = get("https://de.rt.com/" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+            val sitePost = get("https://de.rt.com" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
             "(?<=<h1 class=\"HeadLine-root HeadLine-type_2 \">)[^<]+".r.findFirstIn(sitePost) match {
               case Some(title) =>
                 "(?<=>)[^<]+(?=<\\/time>)".r.findFirstIn(sitePost) match {
                   case Some(time) =>
                     "(?<=<div class=\"Text-root Text-type_1 \">)[^<]+".r.findFirstIn(sitePost) match {
                       case Some(description) =>
-                        result += new RssItem(title.trim, "https://actualidad.rt.com/" + url.trim, description.trim, time.trim, "")
+                        result += new RssItem(title.trim, "https://de.rt.com" + url.trim, description.trim, time.trim, "")
                       case _ => None
                     }
                   case _ => None

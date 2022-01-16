@@ -72,7 +72,7 @@ class WeatherManager extends Actor{
   val executor: ExecutionContextExecutor = system.dispatcher
 
   override def preStart(): Unit = {
-    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(1, TimeUnit.MINUTES), ActorManager.weatherManager, UpdateWeather())
+    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(10, TimeUnit.MINUTES), ActorManager.weatherManager, UpdateWeather())
   }
   override def receive: Receive = {
     case GetWeather(cmd) =>
