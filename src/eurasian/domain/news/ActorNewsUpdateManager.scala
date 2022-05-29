@@ -3,10 +3,12 @@ package eurasian.domain.news
 import java.nio.charset.{Charset, CodingErrorAction}
 import akka.actor.Actor
 import eurasian.domain.actors.ActorManager
-import eurasian.domain.news.ActorNewsManager.{CnRss, DeRss, EnRss, EsRss, FrRss, GetDeRss, GetEsRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, QaRss, RuRss, VnRss}
+import eurasian.domain.news.ActorNewsManager.{ByRss, CnRss, DeRss, EnRss, EsRss, FrRss, GetDeRss, GetEsRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, QaRss, RuRss, VnRss}
 import eurasian.domain.news.ActorNewsUpdateManager.UpdateRss
 import eurasian.domain.news.classes.RssItem
 
+import java.text.SimpleDateFormat
+import java.util.Date
 import scala.collection.mutable.ListBuffer
 
 object ActorNewsUpdateManager{
@@ -16,15 +18,15 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-    val qwe = getKzRss
-    val qw = qwe
+//    val qwe = getEnRss
+//    val qw = qwe
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
   }
 
   override def receive: Receive = {
     case UpdateRss =>
-      ActorManager.newsManager ! RuRss(getRuRssRT)
+      ActorManager.newsManager ! RuRss(getRuRssRIA)
       ActorManager.newsManager ! EnRss(getEnRss)
       ActorManager.newsManager ! CnRss(getCnRss)
       ActorManager.newsManager ! KzRss(getKzRss)
@@ -39,8 +41,46 @@ class ActorNewsUpdateManager extends Actor{
       ActorManager.newsManager ! KoRss(getKoRss)
       ActorManager.newsManager ! VnRss(getVnRss)
       ActorManager.newsManager ! MnRss(getMnRss)
+      ActorManager.newsManager ! ByRss(getByRss)
       println("News Update")
     case _ => None
+  }
+
+  def getByRss: ListBuffer[RssItem] ={
+    val result = ListBuffer.empty[RssItem]
+    try{
+      val data = get("https://bel.sputnik.by/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+      "(?<=cell-list__item m-no-image\")[^>]+".r.findAllIn(data).foreach(aHrefData => {
+        "(?<=href=\")[^\"]+".r.findFirstIn(aHrefData) match {
+          case Some(aHref) =>
+            val url = "https://bel.sputnik.by/" + aHref
+            val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+            "(?<=article__title\">)[^<]+".r.findFirstIn(sitePost) match {
+              case Some(title) =>
+                "(?<=unixtime)[^<]+".r.findFirstIn(sitePost) match {
+                  case Some(timeValue) =>
+                    "(?<=>).+".r.findFirstIn(timeValue) match {
+                      case Some(time) =>
+                        "(?<=article__announce-text\">)[^<]+".r.findFirstIn(sitePost) match {
+                          case Some(description) =>
+                            val quotes = '"'
+                            result += new RssItem(title.trim, url.trim, description.trim.replaceAll(quotes.toString, ""), time.replaceAll("""+""", ""), time.trim)
+                          case _ =>
+                        }
+                      case _ =>
+                    }
+                  case _ => None
+                }
+              case _ => None
+            }
+          case _ => None
+        }
+      })
+    }
+    catch {
+      case e: Exception => None
+    }
+    result
   }
 
   def getKzRss: ListBuffer[RssItem] ={
@@ -118,15 +158,16 @@ class ActorNewsUpdateManager extends Actor{
           "(?<=<span class=\"news-feed__item__title\">)[^<]+".r.findFirstIn(aHref) match {
               case Some(title) =>
                 val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-                "(?<=nbsp;)[^<]+".r.findFirstIn(aHref) match {
-                  case Some(time) =>
-                    "(?<=<div class=\"article__text__overview\">)[<span>\\s]+[^<]+".r.findFirstIn(sitePost) match {
+                "(?<=<span class=\"article__header__date\")[^>]+>[^>]+".r.findFirstIn(sitePost) match {
+                  case Some(timeValue) =>
+                    val time = "(?<=>)[^<]+".r.findFirstIn(timeValue).getOrElse("")
+                    "(?<=<div class=\"article__text__overview\">)[^>]+>[^>]+>".r.findFirstIn(sitePost) match {
                       case Some(description) =>
-                        result += new RssItem(title.trim, url.trim, description.replaceAll("<span>", "").trim, "сегодня", time.trim)
+                        result += new RssItem(title.trim, url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, "сегодня", time.trim)
                       case _ =>
-                        "(?<=<div class=\"article__header__anons\">)[^<]+".r.findFirstIn(sitePost) match {
+                        "(?<=<div class=\"article__header__anons\">)[^>]+>[^>]+>".r.findFirstIn(sitePost) match {
                           case Some(description) =>
-                            result += new RssItem(title.trim, url.trim, description.replaceAll("<span>", "").trim, "сегодня", time.trim)
+                            result += new RssItem(title.trim, url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, "сегодня", time.trim)
                           case _ =>
                             "(?<=<p>)[^<&]+".r.findFirstIn(sitePost) match {
                               case Some(description) =>
@@ -139,6 +180,32 @@ class ActorNewsUpdateManager extends Actor{
                 }
               case _ => None
             }
+        case _ => None
+      }
+    })
+    result
+  }
+  def getRuRssRIA: ListBuffer[RssItem] ={
+    val result = ListBuffer.empty[RssItem]
+    val data = get("https://ria.ru/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+    "<span class=\"share\"[^<]+".r.findAllIn(data).foreach(aHref => {
+      "(?<=url=\")[^\"]+".r.findFirstIn(aHref) match {
+        case Some(url) =>
+          "(?<=data-title=\")[^\"]+".r.findFirstIn(aHref) match {
+            case Some(title) =>
+              val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+              "(?<=<div class=\"article__info-date\">)[^>]+>[^<]+".r.findFirstIn(sitePost) match {
+                case Some(timeValue) =>
+                  val time = "(?<=>).+".r.findFirstIn(timeValue).getOrElse("")
+                  "(?<=second-title\">)[^<]+".r.findFirstIn(sitePost) match {
+                    case Some(description) =>
+                      result += new RssItem(title.trim, url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
+                    case _ => None
+                  }
+                case _ => None
+              }
+            case _ => None
+          }
         case _ => None
       }
     })
@@ -183,6 +250,47 @@ class ActorNewsUpdateManager extends Actor{
     result
   }
   def getEnRss: ListBuffer[RssItem] ={
+    val result = ListBuffer.empty[RssItem]
+    try{
+      val data = get("https://www.politico.eu/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+      "(?<=card__title\">)<[^<]+".r.findAllIn(data).foreach(aHref => {
+        if (result.length < 10){
+          "(?<=href=\")[^\"]+".r.findFirstIn(aHref) match {
+            case Some(url) =>
+              "(?<=\">).+".r.findFirstIn(aHref) match {
+                case Some(title) =>
+                  val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+                  "(?<=article-meta__excerpt\"><p>)[^<]+".r.findFirstIn(sitePost) match {
+                    case Some(description) =>
+                      "(?<=date-time__date\">)[^<]+<[^<]+<[^<]+<".r.findFirstIn(sitePost) match {
+                        case Some(dateTime) =>
+                          "^[^<]+".r.findFirstIn(dateTime) match {
+                            case Some(day) =>
+                              "[^>]+$".r.findFirstIn(dateTime) match {
+                                case Some(time) =>
+                                  result += new RssItem(title.trim, url.trim, description.trim, day.trim + " " + time.trim, "")
+                                case _ => None
+                              }
+                            case _ => None
+                          }
+                        case _ => None
+                      }
+                    case _ => None
+                  }
+                case _ => None
+              }
+            case _ => None
+          }
+        }
+      })
+    }
+    catch {
+      case e: Exception => None
+    }
+    result
+  }
+
+  def getEnRssRT: ListBuffer[RssItem] ={
     val result = ListBuffer.empty[RssItem]
     try{
       val data = get("https://rt.com/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
@@ -539,7 +647,7 @@ class ActorNewsUpdateManager extends Actor{
       connection.setConnectTimeout(connectTimeout)
       connection.setReadTimeout(readTimeout)
       connection.setRequestMethod(requestMethod)
-      connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
+      connection.setRequestProperty("User-Agent", "Runtime/1.0")
       val inputStream = connection.getInputStream
 
       val decoder = Charset.forName("UTF-8").newDecoder()
@@ -551,7 +659,58 @@ class ActorNewsUpdateManager extends Actor{
       content
     }
     catch {
-      case e: Throwable => ""
+      case e: Throwable =>
+        println(e.toString)
+        getAsChrome(url)
     }
   }
+  def getAsChrome(url: String, connectTimeout: Int = 5000, readTimeout: Int = 5000, requestMethod: String = "GET"): String = {
+    try{
+      import java.net.{URL, HttpURLConnection}
+      val connection = (new URL(url)).openConnection.asInstanceOf[HttpURLConnection]
+      connection.setConnectTimeout(connectTimeout)
+      connection.setReadTimeout(readTimeout)
+      connection.setRequestMethod(requestMethod)
+      connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36.")
+      val inputStream = connection.getInputStream
+
+      val decoder = Charset.forName("UTF-8").newDecoder()
+      decoder.onMalformedInput(CodingErrorAction.IGNORE)
+      scala.io.Source.fromInputStream(inputStream)(decoder)
+
+      val content = io.Source.fromInputStream(inputStream)(decoder).mkString
+      if (inputStream != null) inputStream.close()
+      content
+    }
+    catch {
+      case e: Throwable =>
+        println(e.toString)
+        getAsPostman(url)
+    }
+  }
+  def getAsPostman(url: String, connectTimeout: Int = 5000, readTimeout: Int = 5000, requestMethod: String = "GET"): String = {
+    try{
+      import java.net.{URL, HttpURLConnection}
+      val connection = (new URL(url)).openConnection.asInstanceOf[HttpURLConnection]
+      connection.setConnectTimeout(connectTimeout)
+      connection.setReadTimeout(readTimeout)
+      connection.setRequestMethod(requestMethod)
+      connection.setRequestProperty("User-Agent", "PostmanRuntime/7.28.4")
+      val inputStream = connection.getInputStream
+
+      val decoder = Charset.forName("UTF-8").newDecoder()
+      decoder.onMalformedInput(CodingErrorAction.IGNORE)
+      scala.io.Source.fromInputStream(inputStream)(decoder)
+
+      val content = io.Source.fromInputStream(inputStream)(decoder).mkString
+      if (inputStream != null) inputStream.close()
+      content
+    }
+    catch {
+      case e: Throwable =>
+        println(e.toString)
+        ""
+    }
+  }
+
 }

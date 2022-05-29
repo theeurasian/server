@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, Props}
 import eurasian.domain.actors.ActorManager
 import eurasian.domain.actors.ActorManager.{executor, system}
-import eurasian.domain.news.ActorNewsManager.{CnRss, DeRss, EnRss, EsRss, FrRss, GetCnRss, GetDeRss, GetEnRss, GetEsRss, GetFrRss, GetIdRss, GetInRss, GetIrRss, GetKoRss, GetKzRss, GetMnRss, GetPkRss, GetQaRss, GetRuRss, GetVnRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, QaRss, RuRss, VnRss}
+import eurasian.domain.news.ActorNewsManager.{ByRss, CnRss, DeRss, EnRss, EsRss, FrRss, GetByRss, GetCnRss, GetDeRss, GetEnRss, GetEsRss, GetFrRss, GetIdRss, GetInRss, GetIrRss, GetKoRss, GetKzRss, GetMnRss, GetPkRss, GetQaRss, GetRuRss, GetVnRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, QaRss, RuRss, VnRss}
 import eurasian.domain.news.ActorNewsUpdateManager.UpdateRss
 import eurasian.domain.news.classes.RssItem
 import eurasian.domain.websocket.classes.WSCmd
@@ -32,6 +32,7 @@ object ActorNewsManager{
   case class GetKoRss(cmd: WSCmd)
   case class GetVnRss(cmd: WSCmd)
   case class GetMnRss(cmd: WSCmd)
+  case class GetByRss(cmd: WSCmd)
 
   case class RuRss(rss: ListBuffer[RssItem])
   case class EnRss(rss: ListBuffer[RssItem])
@@ -48,6 +49,7 @@ object ActorNewsManager{
   case class KoRss(rss: ListBuffer[RssItem])
   case class VnRss(rss: ListBuffer[RssItem])
   case class MnRss(rss: ListBuffer[RssItem])
+  case class ByRss(rss: ListBuffer[RssItem])
 
 }
 class ActorNewsManager extends Actor{
@@ -67,6 +69,7 @@ class ActorNewsManager extends Actor{
   val koRss: ListBuffer[RssItem] = ListBuffer.empty[RssItem]
   val vnRss: ListBuffer[RssItem] = ListBuffer.empty[RssItem]
   val mnRss: ListBuffer[RssItem] = ListBuffer.empty[RssItem]
+  val byRss: ListBuffer[RssItem] = ListBuffer.empty[RssItem]
 
   implicit var executor: ExecutionContextExecutor = _
   var updateManager: ActorRef = _
@@ -185,6 +188,13 @@ class ActorNewsManager extends Actor{
         mnRss.clear()
         mnRss ++= upd
       }
+    case msg: ByRss =>
+        byRss ++= msg.rss.reverse
+        if (byRss.length > 10){
+          val upd = byRss.clone().drop(byRss.length - 10)
+          byRss.clear()
+          byRss ++= upd
+        }
     case msg: GetRuRss =>
       msg.cmd.reply("rssNews", Json.toJson(ruRss.reverse))
     case msg: GetEnRss =>
@@ -215,6 +225,9 @@ class ActorNewsManager extends Actor{
       msg.cmd.reply("rssNews", Json.toJson(vnRss.reverse))
     case msg: GetMnRss =>
       msg.cmd.reply("rssNews", Json.toJson(mnRss.reverse))
+    case msg: GetByRss =>
+      msg.cmd.reply("rssNews", Json.toJson(byRss.reverse))
+
     case _ => None
   }
 }
