@@ -18,7 +18,7 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-    val qwe = getMnRss
+    val qwe = getByRss
     val qw = qwe
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
@@ -64,7 +64,7 @@ class ActorNewsUpdateManager extends Actor{
                         "(?<=article__announce-text\">)[^<]+".r.findFirstIn(sitePost) match {
                           case Some(description) =>
                             val quotes = '"'
-                            result += new RssItem(title.trim, url.trim, description.trim.replaceAll(quotes.toString, ""), time.replaceAll("""+""", ""), time.trim)
+                            result += new RssItem(title.trim, url.trim, description.trim.replaceAll(quotes.toString, ""), time, time.trim)
                           case _ =>
                         }
                       case _ =>
