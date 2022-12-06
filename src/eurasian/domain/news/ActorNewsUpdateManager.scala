@@ -18,8 +18,8 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-//    val qwe = getEnRss
-//    val qw = qwe
+    val qwe = getMnRss
+    val qw = qwe
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
   }
@@ -50,7 +50,7 @@ class ActorNewsUpdateManager extends Actor{
     val result = ListBuffer.empty[RssItem]
     try{
       val data = get("https://bel.sputnik.by/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-      "(?<=cell-list__item m-no-image\")[^>]+".r.findAllIn(data).foreach(aHrefData => {
+      "(?<=cell-carousel__item-link)[^>]+".r.findAllIn(data).foreach(aHrefData => {
         "(?<=href=\")[^\"]+".r.findFirstIn(aHrefData) match {
           case Some(aHref) =>
             val url = "https://bel.sputnik.by/" + aHref
@@ -94,7 +94,7 @@ class ActorNewsUpdateManager extends Actor{
             val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
             "(?<=<h1>)[^<]+".r.findFirstIn(sitePost) match {
               case Some(title) =>
-                "(?<=class=\"date\">)[^<]+".r.findFirstIn(sitePost) match {
+                "(?<=datetime=\")[^>]+".r.findFirstIn(sitePost) match {
                   case Some(time) =>
                     "(?<=<div class=\"description\">)[^<]+".r.findFirstIn(sitePost) match {
                       case Some(description) =>
@@ -609,19 +609,19 @@ class ActorNewsUpdateManager extends Actor{
   def getMnRss: ListBuffer[RssItem] ={
     val result = ListBuffer.empty[RssItem]
     try{
-      val data = get("https://www.montsame.mn/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-      "(?<=news-box mr-3\">)[^<]+<[^<]+<[^<]+<[^<]+<[^<]+<[^<]+<[^<]+<[^<]+<[^<]+<[^<]+".r.findAllIn(data).foreach(dataContent => {
+      val data = get("https://news.mn/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+      "(?<=<h1 class=\"entry-title \">)[^>]+>[^>]+[^>]+".r.findAllIn(data).foreach(dataContent => {
         if (result.length < 15) {
-          "(?<=<a href=\")[^\"]+".r.findFirstIn(dataContent) match {
+          "(?<=ahref=)[^>]+".r.findFirstIn(dataContent) match {
             case Some(href) =>
-              val url = "https://www.montsame.mn" + href
-              "(?<=content-mn\"><span>)[^<]+".r.findFirstIn(dataContent) match {
-                case Some(title) =>
-                  "(?<=(?<=\"body content-mn\">)[^<]+)[^<]+".r.findFirstIn(dataContent) match {
-                    case Some(description) =>
-                      val sitePost = get(url).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-                      "(?<=class=\"stat\">)[^<]+".r.findFirstIn(sitePost) match {
-                        case Some(date) =>
+              val url = href.trim
+              val sitePost = get(url).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+              "(?<=<iclass=\"far fa-clock\"><\\/i>)[^<]+".r.findFirstIn(sitePost) match {
+                case Some(date) =>
+                  "(?<=<title>)[^|]+".r.findFirstIn(sitePost) match {
+                    case Some(title) =>
+                      "(?<=description content=\")[^\"]+".r.findFirstIn(sitePost) match {
+                        case Some(description) =>
                           result += new RssItem(title.replaceAll("&nbsp;", "").trim, url.trim, description.trim.replaceAll("<br />", ""), date.trim, "")
                         case _ => None
                       }
