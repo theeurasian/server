@@ -3,7 +3,7 @@ package eurasian.domain.actors
 import akka.actor.Actor
 import eurasian.domain.currencies.CurrenciesManager.GetCurrencies
 import eurasian.domain.logger.Logger
-import eurasian.domain.news.ActorNewsManager.{GetByRss, GetCnRss, GetDeRss, GetEnRss, GetEsRss, GetFrRss, GetIdRss, GetInRss, GetIrRss, GetKoRss, GetKzRss, GetMnRss, GetPkRss, GetQaRss, GetRuRss, GetVnRss}
+import eurasian.domain.news.ActorNewsManager.{GetAeRss, GetByRss, GetCnRss, GetDeRss, GetEnRss, GetEsRss, GetFrRss, GetIdRss, GetInRss, GetIrRss, GetKoRss, GetKzRss, GetMnRss, GetPkRss, GetQaRss, GetRuRss, GetVnRss}
 import eurasian.domain.weather.WeatherManager.{GetWeather, GetWeatherRu}
 import eurasian.domain.websocket.ActorSocketManager.{LoginWithPassword, LoginWithSocialToken, LoginWithTicket, RegisterUser, ValidateUser}
 import eurasian.domain.websocket.classes.WSCmd
@@ -62,6 +62,8 @@ class ActorCommandHandler extends Actor with Logger{
           ActorManager.newsManager ! GetMnRss(cmd)
         case "getByRss" =>
           ActorManager.newsManager ! GetByRss(cmd)
+        case "getAeRss" =>
+          ActorManager.newsManager ! GetAeRss(cmd)
         case "getWeather" =>
           ActorManager.weatherManager ! GetWeather(cmd)
         case "getWeatherRu" =>

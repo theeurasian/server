@@ -3,7 +3,7 @@ package eurasian.domain.news
 import java.nio.charset.{Charset, CodingErrorAction}
 import akka.actor.Actor
 import eurasian.domain.actors.ActorManager
-import eurasian.domain.news.ActorNewsManager.{ByRss, CnRss, DeRss, EnRss, EsRss, FrRss, GetDeRss, GetEsRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, QaRss, RuRss, VnRss}
+import eurasian.domain.news.ActorNewsManager.{AeRss, ByRss, CnRss, DeRss, EnRss, EsRss, FrRss, GetDeRss, GetEsRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, QaRss, RuRss, VnRss}
 import eurasian.domain.news.ActorNewsUpdateManager.UpdateRss
 import eurasian.domain.news.classes.RssItem
 
@@ -18,7 +18,7 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-    val qwe = getByRss
+    val qwe = getAeRssRT
     val qw = qwe
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
@@ -42,6 +42,7 @@ class ActorNewsUpdateManager extends Actor{
       ActorManager.newsManager ! VnRss(getVnRss)
       ActorManager.newsManager ! MnRss(getMnRss)
       ActorManager.newsManager ! ByRss(getByRss)
+      ActorManager.newsManager ! AeRss(getAeRssRT)
       println("News Update")
     case _ => None
   }
@@ -82,7 +83,37 @@ class ActorNewsUpdateManager extends Actor{
     }
     result
   }
+  def getAeRssRT: ListBuffer[RssItem] ={
+    val result = ListBuffer.empty[RssItem]
+    try{
+      val data = getOnly("https://arabic.rt.com/").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+      "<li><a href=[^<]+<[^<]+<[^<]+<[^<]+<[^<]+<[^<]+".r.findAllIn(data).foreach(regMatch => {
+        "(?<=a href=\")[^\"]+".r.findFirstIn(regMatch) match {
+          case Some(url) =>
+            val sitePost = getOnly("https://arabic.rt.com/" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+            "(?<=class=\"title\")[^<]+".r.findFirstIn(sitePost) match {
+              case Some(title) =>
+                "(?<=class=\"time\">)[^<]+".r.findFirstIn(sitePost) match {
+                  case Some(time) =>
+                    "(?<=class=\"intro\")[^<]+".r.findFirstIn(sitePost) match {
+                      case Some(description) =>
+                        result += new RssItem(title.trim, "https://arabic.rt.com" + url.replace("<", "").trim, description.replace("<", "").trim, time.replace("<", "").trim, "")
+                      case _ => None
+                    }
+                  case _ => None
+                }
 
+              case _ => None
+            }
+          case _ => None
+        }
+      })
+    }
+    catch {
+      case e: Exception => None
+    }
+    result
+  }
   def getKzRss: ListBuffer[RssItem] ={
     val result = ListBuffer.empty[RssItem]
     try{
@@ -289,7 +320,6 @@ class ActorNewsUpdateManager extends Actor{
     }
     result
   }
-
   def getEnRssRT: ListBuffer[RssItem] ={
     val result = ListBuffer.empty[RssItem]
     try{
@@ -663,6 +693,18 @@ class ActorNewsUpdateManager extends Actor{
         println(e.toString)
         getAsChrome(url)
     }
+  }
+
+  def getOnly(url: String): String = {
+    import java.net.{URL, HttpURLConnection}
+    val connection = (new URL(url)).openConnection.asInstanceOf[HttpURLConnection]
+    val inputStream = connection.getInputStream
+    val decoder = Charset.forName("UTF-8").newDecoder()
+    decoder.onMalformedInput(CodingErrorAction.IGNORE)
+    scala.io.Source.fromInputStream(inputStream)(decoder)
+    val content = io.Source.fromInputStream(inputStream)(decoder).mkString
+    if (inputStream != null) inputStream.close()
+    content
   }
   def getAsChrome(url: String, connectTimeout: Int = 5000, readTimeout: Int = 5000, requestMethod: String = "GET"): String = {
     try{
