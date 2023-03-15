@@ -3,7 +3,7 @@ package eurasian.domain.news
 import java.nio.charset.{Charset, CodingErrorAction}
 import akka.actor.Actor
 import eurasian.domain.actors.ActorManager
-import eurasian.domain.news.ActorNewsManager.{AeRss, ByRss, CnRss, DeRss, EnRss, EsRss, FrRss, GetDeRss, GetEsRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, QaRss, RuRss, VnRss}
+import eurasian.domain.news.ActorNewsManager.{AeRss, ByRss, CnRss, DeRss, EnRss, EsRss, FrRss, GetDeRss, GetEsRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, PtRss, QaRss, RuRss, VnRss}
 import eurasian.domain.news.ActorNewsUpdateManager.UpdateRss
 import eurasian.domain.news.classes.RssItem
 import org.jsoup.Jsoup
@@ -19,8 +19,8 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-    val qwe = getRuRssRIA
-    val qw = qwe
+//    val qwe = getPtRss
+//    val qw = qwe
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
   }
@@ -28,6 +28,7 @@ class ActorNewsUpdateManager extends Actor{
   override def receive: Receive = {
     case UpdateRss =>
       ActorManager.newsManager ! AeRss(getAeRssRT)
+      ActorManager.newsManager ! PtRss(getPtRss)
       ActorManager.newsManager ! RuRss(getRuRssRIA)
       ActorManager.newsManager ! EnRss(getEnRss)
       ActorManager.newsManager ! CnRss(getCnRss)
@@ -48,6 +49,39 @@ class ActorNewsUpdateManager extends Actor{
     case _ => None
   }
 
+  def getPtRss: ListBuffer[RssItem] ={
+    val result = ListBuffer.empty[RssItem]
+    try{
+      val data = get("https://portuguese.news.cn/index.htm").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+      "(?<=<li><h3><a href=\")[^\"]+".r.findAllIn(data).foreach(aHref => {
+        val url = if (aHref.contains("https://portuguese.news.cn/")){
+          aHref
+        }
+        else{
+          "https://portuguese.news.cn/" + aHref
+        }
+        val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+        "(?<=title\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
+          case Some(title) =>
+            "(?<=<div class=\"info\">)[^<]+".r.findFirstIn(sitePost) match {
+              case Some(time) =>
+                "<p>[^<]+".r.findFirstIn(sitePost) match {
+                  case Some(description) =>
+                    val quotes = '"'
+                    result += new RssItem(title.trim, url.trim, description.trim.replaceAll("<p>", "").replaceAll("<", "").replaceAll(quotes.toString, ""), time.trim.replaceAll("丨", ""), time.trim.replaceAll("丨", ""))
+                  case _ =>
+                }
+              case _ =>
+            }
+          case _ => None
+        }
+      })
+    }
+    catch {
+      case e: Exception => None
+    }
+    result
+  }
   def getByRss: ListBuffer[RssItem] ={
     val result = ListBuffer.empty[RssItem]
     try{
