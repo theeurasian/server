@@ -16,8 +16,8 @@ class ActorStartUpManager extends Actor{
       //ActorManager.mailManager = ActorManager.system.actorOf(Props[ActorMailManager])
       //ActorManager.subscribeManager = ActorManager.system.actorOf(Props[ActorSubscribeManager])
       ActorManager.newsManager = ActorManager.system.actorOf(Props[ActorNewsManager])
-//      ActorManager.weatherManager = ActorManager.system.actorOf(Props[WeatherManager])
-//      ActorManager.currenciesManager = ActorManager.system.actorOf(Props[CurrenciesManager])
+      ActorManager.weatherManager = ActorManager.system.actorOf(Props[WeatherManager])
+      ActorManager.currenciesManager = ActorManager.system.actorOf(Props[CurrenciesManager])
       ActorManager.commandHandler = ActorManager.system.actorOf(Props[ActorCommandHandler])
     case "commandHandlerStarted" =>
       ActorManager.socketManager = ActorManager.system.actorOf(Props[ActorSocketManager])
