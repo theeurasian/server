@@ -38,14 +38,14 @@ class CurrenciesManager extends Actor{
     new Currency("RUB"))
 
   override def preStart(): Unit = {
-    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(8, TimeUnit.HOURS), ActorManager.currenciesManager, UpdateCurrencies())
+    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(20, TimeUnit.HOURS), ActorManager.currenciesManager, UpdateCurrencies())
   }
   override def receive: Receive = {
     case GetCurrencies(cmd) =>
       cmd.reply("currencies", Json.toJson(currencies.sortBy(x => x.source)))
     case UpdateCurrencies() =>
-      val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"http://apilayer.net/api/live?access_key=f666b66beec4bca1c0423168f39d9d2f"))
-      //val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"https://eurasian.press/assets/currencies.json"))
+      //val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"http://apilayer.net/api/live?access_key=f666b66beec4bca1c0423168f39d9d2f"))
+      val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"https://eurasian.press/assets/currencies.json"))
       response.onComplete({
         case Success(value) =>
           value.entity.dataBytes.runFold(ByteString(""))(_ ++ _).foreach { body =>

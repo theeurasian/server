@@ -19,8 +19,8 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-//    val qwe = getPtRss
-//    val qw = qwe
+    val qwe = getIdRss
+    val qw = qwe
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
   }
