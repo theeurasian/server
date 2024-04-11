@@ -369,7 +369,7 @@ class ActorNewsUpdateManager extends Actor{
                     case Some(dateTime) =>
                       "(?<=class=\"headline__text inline-placeholder\" id=\"maincontent\">)[^<]+".r.findFirstIn(sitePost) match {
                         case Some(title) =>
-                          result += new RssItem(title.trim, url.trim, description.trim, dateTime.trim, "")
+                          result += new RssItem(title.trim, "https://edition.cnn.com" + url.trim, description.trim, dateTime.trim, "")
                         case _ => None
                       }
                     case _ => None
