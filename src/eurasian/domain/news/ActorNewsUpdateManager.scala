@@ -19,8 +19,10 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-    val qwe = getIdRss
-    val qw = qwe
+    //val qwe = getEnRss
+    //val qwe1 = getCnRss
+    //val qw = qwe
+    //val qw1 = qwe1
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
   }
@@ -287,15 +289,12 @@ class ActorNewsUpdateManager extends Actor{
                 "(?<=target=\"_blank\">)[^<]+".r.findFirstIn(aHref) match {
                   case Some(title) =>
                     val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-                    "(?<=<span class=\"time\">)[^<]+".r.findFirstIn(sitePost) match {
+                    "(?<=class=\"time\">)[^<]+".r.findFirstIn(sitePost) match {
                       case Some(time) =>
-                        "(?<=<span class=\"day\"><em>)[^<]+".r.findFirstIn(sitePost) match {
-                          case Some(day) =>
-                            "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
-                              case Some(description) =>
-                                result += new RssItem(title.trim, url.trim, description.trim, day.trim + " " + time.trim, "")
-                              case _ => None
-                            }
+                        "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
+                          case Some(description) =>
+                            val split = time.split(" ").toList.filter(_.nonEmpty)
+                            result += new RssItem(title.trim, url.trim, description.trim, split.head, split.last)
                           case _ => None
                         }
                       case _ => None
@@ -324,7 +323,7 @@ class ActorNewsUpdateManager extends Actor{
               "(?<=\">).+".r.findFirstIn(aHref) match {
                 case Some(title) =>
                   val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-                  "(?<=article-meta__excerpt\"><p>)[^<]+".r.findFirstIn(sitePost) match {
+                  "(?<=hero__excerpt\">)[^<]+".r.findFirstIn(sitePost) match {
                     case Some(description) =>
                       "(?<=date-time__date\">)[^<]+<[^<]+<[^<]+<".r.findFirstIn(sitePost) match {
                         case Some(dateTime) =>
@@ -349,7 +348,8 @@ class ActorNewsUpdateManager extends Actor{
       })
     }
     catch {
-      case e: Exception => None
+      case e: Exception =>
+        println(e.toString)
     }
     result
   }
@@ -683,7 +683,7 @@ class ActorNewsUpdateManager extends Actor{
                 case Some(date) =>
                   "(?<=<title>)[^|]+".r.findFirstIn(sitePost) match {
                     case Some(title) =>
-                      "(?<=description content=\")[^\"]+".r.findFirstIn(sitePost) match {
+                      "(?<=description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
                         case Some(description) =>
                           result += new RssItem(title.replaceAll("&nbsp;", "").trim, url.trim, description.trim.replaceAll("<br />", ""), date.trim, "")
                         case _ => None
