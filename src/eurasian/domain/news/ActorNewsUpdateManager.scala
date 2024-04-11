@@ -19,7 +19,7 @@ class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
     //ActorManager.newsManager ! CnRss(getMnRss)
-    //val qwe = getEnRss
+    //val qwe = getEnRssReuters
     //val qwe1 = getCnRss
     //val qw = qwe
     //val qw1 = qwe1
@@ -32,7 +32,7 @@ class ActorNewsUpdateManager extends Actor{
       ActorManager.newsManager ! AeRss(getAeRssRT)
       ActorManager.newsManager ! PtRss(getPtRss)
       ActorManager.newsManager ! RuRss(getRuRssRIA)
-      ActorManager.newsManager ! EnRss(getEnRss)
+      ActorManager.newsManager ! EnRss(getEnRssReuters)
       ActorManager.newsManager ! CnRss(getCnRss)
       ActorManager.newsManager ! KzRss(getKzRss)
       ActorManager.newsManager ! EsRss(getEsRssRT)
@@ -332,10 +332,44 @@ class ActorNewsUpdateManager extends Actor{
                               "[^>]+$".r.findFirstIn(dateTime) match {
                                 case Some(time) =>
                                   result += new RssItem(title.trim, url.trim, description.trim, day.trim + " " + time.trim, "")
+                                  println(result.length)
                                 case _ => None
                               }
                             case _ => None
                           }
+                        case _ => None
+                      }
+                    case _ => None
+                  }
+                case _ => None
+              }
+            case _ => None
+          }
+        }
+      })
+    }
+    catch {
+      case e: Exception =>
+        println(e.toString)
+    }
+    result
+  }
+  def getEnRssReuters: ListBuffer[RssItem] ={
+    val result = ListBuffer.empty[RssItem]
+    try{
+      val data = get("https://edition.cnn.com/world").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+      "<a href=\"[^\"]+\" class=\"container__link container__link--type-article container_lead-plus-headlines__link".r.findAllIn(data).foreach(aHref => {
+        if (result.length < 10){
+          "(?<=href=\")[^\"]+".r.findFirstIn(aHref) match {
+            case Some(url) =>
+              val sitePost = get("https://edition.cnn.com" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+              "(?<=\"metaCaption\" class=\"inline-placeholder\">)[^<]+".r.findFirstIn(sitePost) match {
+                case Some(description) =>
+                  "(?<=>  Published)[^<]+".r.findFirstIn(sitePost) match {
+                    case Some(dateTime) =>
+                      "(?<=class=\"headline__text inline-placeholder\" id=\"maincontent\">)[^<]+".r.findFirstIn(sitePost) match {
+                        case Some(title) =>
+                          result += new RssItem(title.trim, url.trim, description.trim, dateTime.trim, "")
                         case _ => None
                       }
                     case _ => None
