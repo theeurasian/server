@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Eurasian.iml" filepath="$PROJECT_DIR$/Eurasian.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JsonServer.iml" filepath="$PROJECT_DIR$/JsonServer.iml" />
     </modules>
   </component>
 </project>

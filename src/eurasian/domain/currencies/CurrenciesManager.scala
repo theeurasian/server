@@ -1,14 +1,12 @@
 package eurasian.domain.currencies
 
 import akka.actor.{Actor, ActorSystem}
-import akka.http.scaladsl.{Http, HttpExt}
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest}
+import akka.http.scaladsl.{Http, HttpExt}
 import akka.util.ByteString
 import eurasian.domain.actors.ActorManager
 import eurasian.domain.currencies.CurrenciesManager.{GetCurrencies, UpdateCurrencies}
 import eurasian.domain.currencies.classes.Currency
-import eurasian.domain.weather.WeatherManager.{GetWeather, GetWeatherRu, UpdateWeather}
-import eurasian.domain.weather.classes.WeatherInfo
 import eurasian.domain.websocket.classes.WSCmd
 import play.api.libs.json.Json
 
@@ -44,8 +42,8 @@ class CurrenciesManager extends Actor{
     case GetCurrencies(cmd) =>
       cmd.reply("currencies", Json.toJson(currencies.sortBy(x => x.source)))
     case UpdateCurrencies() =>
-      //val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"http://apilayer.net/api/live?access_key=f666b66beec4bca1c0423168f39d9d2f"))
-      val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"https://eurasian.press/assets/currencies.json"))
+      val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"http://apilayer.net/api/live?access_key=f666b66beec4bca1c0423168f39d9d2f"))
+      //val response = http.singleRequest(HttpRequest(HttpMethods.GET, s"https://eurasian.press/assets/currencies.json"))
       response.onComplete({
         case Success(value) =>
           value.entity.dataBytes.runFold(ByteString(""))(_ ++ _).foreach { body =>
