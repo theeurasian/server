@@ -37,7 +37,7 @@ class ActorNewsUpdateManager extends Actor{
     case UpdateRss =>
       ActorManager.newsManager ! AeRss(getAeRssCGTN)
       ActorManager.newsManager ! PtRss(getPtRss)
-      ActorManager.newsManager ! RuRss(getRuRssIZ)
+      ActorManager.newsManager ! RuRss(getRuRssIZNew)
       ActorManager.newsManager ! EnRss(getEnRssCGTN)
       ActorManager.newsManager ! CnRss(getCnRssCGTN)
       ActorManager.newsManager ! KzRss(getKzRss)
