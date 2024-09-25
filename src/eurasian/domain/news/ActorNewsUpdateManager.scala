@@ -20,6 +20,7 @@ object ActorNewsUpdateManager{
 class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
+    //val ru = getRuRssIZ
     //ActorManager.newsManager ! CnRss(getMnRss)
     //getSite("http://english.news.cn/home.htm")
     //val qwe = getAeRssCGTN
@@ -36,7 +37,7 @@ class ActorNewsUpdateManager extends Actor{
     case UpdateRss =>
       ActorManager.newsManager ! AeRss(getAeRssCGTN)
       ActorManager.newsManager ! PtRss(getPtRss)
-      ActorManager.newsManager ! RuRss(getRuRssRIA)
+      ActorManager.newsManager ! RuRss(getRuRssIZ)
       ActorManager.newsManager ! EnRss(getEnRssCGTN)
       ActorManager.newsManager ! CnRss(getCnRssCGTN)
       ActorManager.newsManager ! KzRss(getKzRss)
@@ -282,6 +283,32 @@ class ActorNewsUpdateManager extends Actor{
     })
     result
   }
+  def getRuRssIZ: ListBuffer[RssItem] ={
+    val result = ListBuffer.empty[RssItem]
+    val data = get("https://iz.ru/news").replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+    "<a href=\"[^\"]+\" class=\"short".r.findAllIn(data).foreach(aHref => {
+      "(?<=a href=\")[^\"]+".r.findFirstIn(aHref) match {
+        case Some(url) =>
+          val sitePost = get("https://iz.ru/" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+          "(?<=headline\"><span>)[^<]+".r.findFirstIn(sitePost) match {
+            case Some(title) =>
+              "(?<=>)[^<]+(?=</time)".r.findFirstIn(sitePost) match {
+                case Some(time) =>
+                  "(?<=alternativeHeadline\">)[^<]+".r.findFirstIn(sitePost) match {
+                    case Some(description) =>
+                      result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
+                    case _ => None
+                  }
+                case _ => None
+              }
+            case _ => None
+          }
+        case _ => None
+      }
+    })
+    result
+  }
+
   def getCnRssCGTN: ListBuffer[RssItem] ={
     val result = ListBuffer.empty[RssItem]
     try{
