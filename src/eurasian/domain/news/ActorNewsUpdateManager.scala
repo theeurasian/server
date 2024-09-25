@@ -20,7 +20,7 @@ object ActorNewsUpdateManager{
 class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
-    //val ru = getRuRssIZNew
+    val ru = getRuRssIZNew
     //ActorManager.newsManager ! CnRss(getMnRss)
     //getSite("http://english.news.cn/home.htm")
     //val qwe = getAeRssCGTN
@@ -314,7 +314,7 @@ class ActorNewsUpdateManager extends Actor{
     "<li class=\"feed-item\">[^>]+>[^>]+>".r.findAllIn(data).foreach(aHref => {
       "(?<=href=')[^']+".r.findFirstIn(aHref) match {
         case Some(url) =>
-          val sitePost = get(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+          val sitePost = getOnly(url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
           "(?<=headline\"><span>)[^<]+".r.findFirstIn(sitePost) match {
             case Some(title) =>
               "(?<=>)[^<]+(?=</time)".r.findFirstIn(sitePost) match {
@@ -973,6 +973,7 @@ class ActorNewsUpdateManager extends Actor{
   }
   def getAsChrome(url: String, connectTimeout: Int = 5000, readTimeout: Int = 5000, requestMethod: String = "GET"): String = {
     try{
+      System.setProperty("http.agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7");
       import java.net.{HttpURLConnection, URL}
       val connection = (new URL(url)).openConnection.asInstanceOf[HttpURLConnection]
       connection.setConnectTimeout(connectTimeout)
