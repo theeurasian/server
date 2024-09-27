@@ -1,16 +1,16 @@
 package eurasian.domain.news
 
 
-import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, Props}
 import eurasian.domain.actors.ActorManager
-import eurasian.domain.actors.ActorManager.{executor, system}
-import eurasian.domain.news.ActorNewsManager.{AeRss, ByRss, CnRss, DeRss, EnRss, EsRss, FrRss, GetAeRss, GetByRss, GetCnRss, GetDeRss, GetEnRss, GetEsRss, GetFrRss, GetIdRss, GetInRss, GetIrRss, GetKoRss, GetKzRss, GetMnRss, GetPkRss, GetPtRss, GetQaRss, GetRuRss, GetVnRss, IdRss, InRss, IrRss, KoRss, KzRss, MnRss, PkRss, PtRss, QaRss, RuRss, VnRss}
-import eurasian.domain.news.ActorNewsUpdateManager.UpdateRss
+import eurasian.domain.actors.ActorManager.system
+import eurasian.domain.news.ActorNewsManager._
+import eurasian.domain.news.ActorNewsUpdateManager.{UpdateRss, UpdateRuRss}
 import eurasian.domain.news.classes.RssItem
 import eurasian.domain.websocket.classes.WSCmd
 import play.api.libs.json.Json
 
+import java.util.concurrent.TimeUnit
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.Duration
@@ -84,6 +84,7 @@ class ActorNewsManager extends Actor{
     executor = system.dispatcher
     updateManager = ActorManager.system.actorOf(Props[ActorNewsUpdateManager])
     ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(1, TimeUnit.HOURS), updateManager, UpdateRss)
+    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(3, TimeUnit.MINUTES), updateManager, UpdateRuRss)
   }
 
 

@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import eurasian.domain.actors.ActorManager
 import eurasian.domain.news.ActorNewsManager._
-import eurasian.domain.news.ActorNewsUpdateManager.UpdateRss
+import eurasian.domain.news.ActorNewsUpdateManager.{UpdateRss, UpdateRuRss}
 import eurasian.domain.news.classes.RssItem
 import org.jsoup.Jsoup
 
@@ -16,11 +16,12 @@ import scala.util.{Failure, Success}
 
 object ActorNewsUpdateManager{
   case class UpdateRss()
+  case class UpdateRuRss()
 }
 class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
-    val ru = getRuRssIZ
+    val ru = getRuRssRIA
     //ActorManager.newsManager ! CnRss(getMnRss)
     //getSite("http://english.news.cn/home.htm")
     //val qwe = getAeRssCGTN
@@ -37,7 +38,7 @@ class ActorNewsUpdateManager extends Actor{
     case UpdateRss =>
       ActorManager.newsManager ! AeRss(getAeRssCGTN)
       ActorManager.newsManager ! PtRss(getPtRss)
-      ActorManager.newsManager ! RuRss(getRuRssIZ)
+      ActorManager.newsManager ! RuRss(getRuRssRIA)
       ActorManager.newsManager ! EnRss(getEnRssCGTN)
       ActorManager.newsManager ! CnRss(getCnRssCGTN)
       ActorManager.newsManager ! KzRss(getKzRss)
@@ -54,6 +55,8 @@ class ActorNewsUpdateManager extends Actor{
       ActorManager.newsManager ! ByRss(getByRss)
       ActorManager.newsManager ! KoRss(getKoRss)
       println("News Update")
+    case UpdateRuRss =>
+      ActorManager.newsManager ! RuRss(getRuRssRIA)
     case _ => None
   }
 
