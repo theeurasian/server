@@ -21,7 +21,7 @@ object ActorNewsUpdateManager{
 class ActorNewsUpdateManager extends Actor{
 
   override def preStart(): Unit = {
-    val ru = getRuRssRIA
+    val ru = getRuRssIZ
     //ActorManager.newsManager ! CnRss(getMnRss)
     //getSite("http://english.news.cn/home.htm")
     //val qwe = getAeRssCGTN
@@ -38,7 +38,7 @@ class ActorNewsUpdateManager extends Actor{
     case UpdateRss =>
       ActorManager.newsManager ! AeRss(getAeRssCGTN)
       ActorManager.newsManager ! PtRss(getPtRss)
-      ActorManager.newsManager ! RuRss(getRuRssRIA)
+      //ActorManager.newsManager ! RuRss(getRuRssIZ)
       ActorManager.newsManager ! EnRss(getEnRssCGTN)
       ActorManager.newsManager ! CnRss(getCnRssCGTN)
       ActorManager.newsManager ! KzRss(getKzRss)
@@ -56,7 +56,7 @@ class ActorNewsUpdateManager extends Actor{
       ActorManager.newsManager ! KoRss(getKoRss)
       println("News Update")
     case UpdateRuRss =>
-      ActorManager.newsManager ! RuRss(getRuRssRIA)
+      ActorManager.newsManager ! RuRss(getRuRssIZ)
     case _ => None
   }
 
@@ -299,7 +299,9 @@ class ActorNewsUpdateManager extends Actor{
                 case Some(time) =>
                   "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
                     case Some(description) =>
-                      result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
+                      if (!result.exists(_.title == title.trim)){
+                        result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
+                      }
                     case _ => None
                   }
                 case _ => None

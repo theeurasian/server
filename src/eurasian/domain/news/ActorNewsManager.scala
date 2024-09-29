@@ -84,7 +84,7 @@ class ActorNewsManager extends Actor{
     executor = system.dispatcher
     updateManager = ActorManager.system.actorOf(Props[ActorNewsUpdateManager])
     ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(1, TimeUnit.HOURS), updateManager, UpdateRss)
-    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(3, TimeUnit.MINUTES), updateManager, UpdateRuRss)
+    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(5, TimeUnit.MINUTES), updateManager, UpdateRuRss)
   }
 
 
