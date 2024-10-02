@@ -94,7 +94,7 @@ class ActorNewsManager extends Actor{
       //ruRss ++= msg.rss.reverse
       if (msg.rss.nonEmpty){
         ruRss.clear()
-        ruRss ++= msg.rss
+        ruRss ++= msg.rss.reverse
       }
     case msg: EnRss =>
       enRss ++= msg.rss.reverse
