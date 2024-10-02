@@ -84,18 +84,17 @@ class ActorNewsManager extends Actor{
     executor = system.dispatcher
     updateManager = ActorManager.system.actorOf(Props[ActorNewsUpdateManager])
     ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(1, TimeUnit.HOURS), updateManager, UpdateRss)
-    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(5, TimeUnit.MINUTES), updateManager, UpdateRuRss)
+    ActorManager.system.scheduler.schedule(Duration(0, TimeUnit.SECONDS), Duration(25, TimeUnit.MINUTES), updateManager, UpdateRuRss)
   }
 
 
   override def receive: Receive = {
 
     case msg: RuRss =>
-      ruRss ++= msg.rss.reverse
-      if (ruRss.length > 10){
-        val upd = ruRss.clone().drop(ruRss.length - 10)
+      //ruRss ++= msg.rss.reverse
+      if (msg.rss.nonEmpty){
         ruRss.clear()
-        ruRss ++= upd
+        ruRss ++= msg.rss
       }
     case msg: EnRss =>
       enRss ++= msg.rss.reverse

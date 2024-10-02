@@ -38,7 +38,7 @@ class ActorNewsUpdateManager extends Actor{
     case UpdateRss =>
       ActorManager.newsManager ! AeRss(getAeRssCGTN)
       ActorManager.newsManager ! PtRss(getPtRss)
-      //ActorManager.newsManager ! RuRss(getRuRssIZ)
+      ActorManager.newsManager ! RuRss(getRuRssIZ)
       ActorManager.newsManager ! EnRss(getEnRssCGTN)
       ActorManager.newsManager ! CnRss(getCnRssCGTN)
       ActorManager.newsManager ! KzRss(getKzRss)
@@ -306,12 +306,29 @@ class ActorNewsUpdateManager extends Actor{
                   }
                 case _ => None
               }
-            case _ => None
+            case _ =>
+              "(?<=headline\"><span>)[^<]+".r.findFirstIn(sitePost) match {
+                case Some(title) =>
+                  "(?<=>)[^<]+(?=</time)".r.findFirstIn(sitePost) match {
+                    case Some(time) =>
+                      "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
+                        case Some(description) =>
+                          if (!result.exists(_.title == title.trim)){
+                            result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
+                          }
+                        case _ => None
+                      }
+                    case _ => None
+                  }
+                case _ => None
+              }
+
           }
         case _ => None
       }
     })
-    result
+    println("ru news updates, length " + result.length.toString)
+    result.take(10)
   }
   def getRuRssIZNew: ListBuffer[RssItem] ={
     val result = ListBuffer.empty[RssItem]
