@@ -30,6 +30,7 @@ class ActorNewsUpdateManager extends Actor{
     //val qw1 = qwe1
 //    val qwe1 = getKzRss
 //    val qwe2 = getRuRssRT
+    val q = 0
   }
 
   implicit val system = ActorManager.system
@@ -292,37 +293,42 @@ class ActorNewsUpdateManager extends Actor{
     "<a href=\"[^\"]+\" class=\"short".r.findAllIn(data).foreach(aHref => {
       "(?<=a href=\")[^\"]+".r.findFirstIn(aHref) match {
         case Some(url) =>
-          val sitePost = getOnly("https://iz.ru/" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
-          "(?<=alternativeHeadline\">)[^<]+".r.findFirstIn(sitePost) match {
-            case Some(title) =>
-              "(?<=>)[^<]+(?=</time)".r.findFirstIn(sitePost) match {
-                case Some(time) =>
-                  "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
-                    case Some(description) =>
-                      if (!result.exists(_.title == title.trim)){
-                        result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
-                      }
-                    case _ => None
-                  }
-                case _ => None
-              }
-            case _ =>
-              "(?<=headline\"><span>)[^<]+".r.findFirstIn(sitePost) match {
-                case Some(title) =>
-                  "(?<=>)[^<]+(?=</time)".r.findFirstIn(sitePost) match {
-                    case Some(time) =>
-                      "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
-                        case Some(description) =>
-                          if (!result.exists(_.title == title.trim)){
-                            result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
-                          }
-                        case _ => None
-                      }
-                    case _ => None
-                  }
-                case _ => None
-              }
+          try{
+            val sitePost = getOnly("https://iz.ru/" + url.trim).replaceAll("\\n", "").replaceAll("\\r", "").replaceAll("\\t", "")
+            "(?<=alternativeHeadline\">)[^<]+".r.findFirstIn(sitePost) match {
+              case Some(title) =>
+                "(?<=>)[^<]+(?=</time)".r.findFirstIn(sitePost) match {
+                  case Some(time) =>
+                    "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
+                      case Some(description) =>
+                        if (!result.exists(_.title == title.trim)){
+                          result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
+                        }
+                      case _ => None
+                    }
+                  case _ => None
+                }
+              case _ =>
+                "(?<=headline\"><span>)[^<]+".r.findFirstIn(sitePost) match {
+                  case Some(title) =>
+                    "(?<=>)[^<]+(?=</time)".r.findFirstIn(sitePost) match {
+                      case Some(time) =>
+                        "(?<=<meta name=\"description\" content=\")[^\"]+".r.findFirstIn(sitePost) match {
+                          case Some(description) =>
+                            if (!result.exists(_.title == title.trim)){
+                              result += new RssItem(title.trim, "https://iz.ru/" + url.trim, description.replaceAll("<span>", "").replaceAll("</span>", "").trim, time.trim, "")
+                            }
+                          case _ => None
+                        }
+                      case _ => None
+                    }
+                  case _ => None
+                }
 
+            }
+          }
+          catch {
+            case e: Throwable => println(e.toString)
           }
         case _ => None
       }
@@ -985,13 +991,20 @@ class ActorNewsUpdateManager extends Actor{
       }
   }
   def getOnly(url: String): String = {
-    val connection = Jsoup.connect(url)
-    connection.userAgent("Mozilla/5.0")
-//    connection.referrer("http://www.google.com")
-//    connection.ignoreHttpErrors(true)
-//    connection.timeout(10000)
-    val strHTML = connection.get().html()
-    strHTML
+    try{
+      val connection = Jsoup.connect(url)
+      connection.userAgent("Mozilla/5.0")
+      //    connection.referrer("http://www.google.com")
+      //    connection.ignoreHttpErrors(true)
+      //    connection.timeout(10000)
+      val strHTML = connection.get().html()
+      strHTML
+    }
+    catch {
+      case e: Throwable =>
+        println(e.toString)
+        ""
+    }
   }
   def getAsChrome(url: String, connectTimeout: Int = 5000, readTimeout: Int = 5000, requestMethod: String = "GET"): String = {
     try{
